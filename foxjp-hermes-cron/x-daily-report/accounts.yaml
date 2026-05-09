@@ -1,0 +1,11 @@
+# X Daily Finance Report configuration
+# Add more accounts under accounts as needed.
+# recipient_email: auto means send to the authenticated Gmail account.
+recipient_email: ajteterhu@gmail.com
+timezone: Asia/Shanghai
+lookback: yesterday
+max_items_per_account: 100
+accounts:
+  - handle: shufen46250836
+    url: https://x.com/shufen46250836
+    label: shufen46250836

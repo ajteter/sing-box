@@ -1,0 +1,55 @@
+import os
+import subprocess
+import json
+import re
+from datetime import datetime
+import requests
+
+def is_stable(version_str):
+    if not version_str: return False
+    return not re.search(r'(alpha|beta|rc|pre|dev)', version_str, re.IGNORECASE)
+
+def get_latest_github(repo):
+    try:
+        url = f"https://api.github.com/repos/{repo}/releases/latest"
+        res = requests.get(url, timeout=10).json()
+        if 'tag_name' in res and is_stable(res['tag_name']):
+            return {'version': res['tag_name'], 'body': res.get('body', '')[:200]}
+    except: pass
+    return None
+
+def check_market():
+    try:
+        results = []
+        # US10Y
+        us10y_res = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/^TNX", timeout=10).json()
+        us10y = us10y_res['chart']['result'][0]['meta']['regularMarketPrice']
+        if us10y > 4.55:
+            results.append(f"⚠️ 风险预警: US10Y ({us10y:.2f}%) 已上穿 4.55%。备注: 杀估值开始，减仓科技。")
+        # DXY
+        dxy_res = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB", timeout=10).json()
+        dxy = dxy_res['chart']['result'][0]['meta']['regularMarketPrice']
+        if dxy > 106.5:
+            results.append(f"⚠️ 风险预警: DXY ({dxy:.2f}) 已上穿 106.5。")
+        return results
+    except: return []
+
+def main():
+    reports = {
+        "updates": {},
+        "market_alerts": check_market(),
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    # Send all alerts via gateway if exists
+    for alert in reports.get("market_alerts", []):
+        try:
+            requests.post("http://127.0.0.1:8787/notify", json={"message": alert})
+        except: pass
+
+    with open("/tmp/hermes_updates.json", "w") as f:
+        json.dump(reports, f, indent=4)
+    print(json.dumps(reports, indent=4))
+
+if __name__ == "__main__":
+    main()

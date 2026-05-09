@@ -1,0 +1,86 @@
+{
+  "jobs": [
+    {
+      "id": "0628054925cb",
+      "name": "daily-update-monitor",
+      "prompt": "\u6700\u7ec8\u56de\u590d\u5fc5\u987b\u539f\u6837\u8f93\u51fa Script Output\uff1b\u82e5 Script Output \u4e3a [SILENT]\uff0c\u5219\u53ea\u8f93\u51fa [SILENT]\uff1b\u7981\u6b62\u4efb\u4f55\u6539\u5199\u3001\u8865\u5145\u3001\u603b\u7ed3\u6216\u683c\u5f0f\u8c03\u6574\u3002",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "update_monitor.py",
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 14 * * *",
+        "display": "0 14 * * *"
+      },
+      "schedule_display": "0 14 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 32
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-27T10:52:10.732655+00:00",
+      "next_run_at": "2026-05-09T14:00:00+00:00",
+      "last_run_at": "2026-05-08T14:02:50.263756+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": "delivery to weixin:o9cq807fCkdkioqQ1oIUgzB5hRr0@im.wechat failed: cannot import name 'is_host_excluded_by_no_proxy' from 'gateway.platforms.base' (/root/.hermes/hermes-agent/gateway/platforms/base.py)",
+      "deliver": "origin",
+      "origin": {
+        "platform": "weixin",
+        "chat_id": "o9cq807fCkdkioqQ1oIUgzB5hRr0@im.wechat",
+        "chat_name": null,
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "fccf89573c04",
+      "name": "X \u8d22\u7ecf\u65e5\u62a5\u90ae\u4ef6 | UTC+8 10:00",
+      "prompt": "Run the X/Twitter daily finance report and email it to the configured recipient.\n\nTask steps:\n1. Execute: cd /root/.hermes/x-daily-report && python report.py\n2. Report the exact stdout/stderr in your final response.\n3. Do not create, update, or schedule any cron jobs from this cron run.\n\nImportant:\n- report.py uses real data only through twitter-cli.\n- If X authentication is missing, report.py still sends an email containing the raw error.\n- Gmail delivery uses Hermes Google Workspace OAuth and the recipient configured in /root/.hermes/x-daily-report/accounts.yaml.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2 * * *",
+        "display": "0 2 * * *"
+      },
+      "schedule_display": "0 2 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 12
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-29T11:52:47.803894+00:00",
+      "next_run_at": "2026-05-10T02:00:00+00:00",
+      "last_run_at": "2026-05-09T02:01:09.923855+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": null,
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": "/root/.hermes/x-daily-report"
+    }
+  ],
+  "updated_at": "2026-05-09T02:01:09.925845+00:00"
+}
