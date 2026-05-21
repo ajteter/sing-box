@@ -24,16 +24,25 @@
 
 * * *
 ## 1.更新信息
-2026.04.11 v1.3.9 1. remove pre-install UFW blocking logic, fallback to iptables when inactive; 2. avoid unnecessary sing-box restart for CDN / bandwidth / port hopping changes; 3. reduce redundant single-use functions; 1. 移除安装前 UFW 强制校验，inactive 自动回退 iptables; 2. 优选地址 / 带宽 / 端口跳跃修改不再重启 sing-box; 3. 清理单次调用函数，提升结构可读性
 
-2026.04.10 v1.3.8 1. Automatically detect UFW and switch rule management accordingly; 2. Merge the old -p (port change) functionality into -d (config editor), simplifying usage; 3. Remove the standalone -p / -P entry points entirely; 1. 自动检测 UFW 并切换规则管理方式; 2. 将原有 -p（修改端口）功能合并到 -d（配置修改），简化使用方式; 3. 完全移除独立的 -p / -P 入口
+2026.05.18 v1.3.13 Added top-level http_clients configuration; 增加顶层的 http_clients 配置
 
-2026.04.09 v1.3.7 1. Add support for enabling/disabling Hysteria2 port hopping and modifying port ranges after installation (sb -d); 2. Allow customization of Hysteria2 upload/download bandwidth without reinstalling; 3. Enhance client configuration with proper Hysteria2 bandwidth (up/down) and port hopping parameters; 1. 支持安装后启用/禁用 Hysteria2 端口跳跃，并可修改端口范围 (sb -d); 2. 支持自定义 Hysteria2 上下行带宽，无需重新安装; 3. 完善客户端配置，补充 Hysteria2 上传/下载速率及端口跳跃参数
+2026.05.14 v1.3.12 1. Add Hysteria2 Realm support for machines without public inbound access, with optional WARP-assisted hole punching for strict NAT environments; 2. Realm configuration export is supported for Clash/Mihomo and sing-box clients; 3. Hysteria2 Realm can be enabled or disabled directly via sb -d; 4. Non-interactive installs support --HY2_REALM and --HY2_WARP parameters; 1. 增加 Hysteria2 Realm 支持，适用于没有公网入口的机器，并可选 WARP 辅助打洞; 2. Realm 已支持导出 Clash/Mihomo 和 sing-box 客户端配置; 3. 修改节点配置时可直接开启或关闭 Hysteria2 Realm; 4. 无交互安装支持 --HY2_REALM 与 --HY2_WARP 参数
+
+2026.05.06 v1.3.11 1. Generate v2rayn:// dedicated links for Tuic subscriptions; 2. Generate v2rayn:// dedicated links for AnyTLS subscriptions; 3. Generate v2rayn:// dedicated links for naive http2 and quic modes. Thanks to @DHR60; 1. 为 Tuic 订阅生成 v2rayn:// 专属链接; 2. 为 AnyTLS 订阅生成 v2rayn:// 专属链接; 3. 为 naive http2 和 quic 模式生成 v2rayn:// 专属链接，感谢 @DHR60
 
 <details>
     <summary>历史更新 history（点击即可展开或收起）</summary>
 <br>
 
+>2026.04.25 v1.3.10 Added native protocol, but client support is extremely limited, with Shadowrocket offering the best compatibility. For the sing-box core, you must use the -glibc or -musl version according to the requirements; refer to the official documentation for details: https://sing-box.sagernet.org/configuration/outbound/naive/; 增加 native 协议，支持该协议的客户端极少，Shadowrocket 支持最好。sing-box 内核需要按说明使用-glibc 或者 -musl 版本，详见官方说明 https://sing-box.sagernet.org/zh/configuration/outbound/naive/
+>
+>2026.04.11 v1.3.9 1. remove pre-install UFW blocking logic, fallback to iptables when inactive; 2. avoid unnecessary sing-box restart for CDN / bandwidth / port hopping changes; 3. reduce redundant single-use functions; 1. 移除安装前 UFW 强制校验，inactive 自动回退 iptables; 2. 优选地址 / 带宽 / 端口跳跃修改不再重启 sing-box; 3. 清理单次调用函数，提升结构可读性
+>
+>2026.04.10 v1.3.8 1. Automatically detect UFW and switch rule management accordingly; 2. Merge the old -p (port change) functionality into -d (config editor), simplifying usage; 3. Remove the standalone -p / -P entry points entirely; 1. 自动检测 UFW 并切换规则管理方式; 2. 将原有 -p（修改端口）功能合并到 -d（配置修改），简化使用方式; 3. 完全移除独立的 -p / -P 入口
+>
+>2026.04.09 v1.3.7 1. Add support for enabling/disabling Hysteria2 port hopping and modifying port ranges after installation (sb -d); 2. Allow customization of Hysteria2 upload/download bandwidth without reinstalling; 3. Enhance client configuration with proper Hysteria2 bandwidth (up/down) and port hopping parameters; 1. 支持安装后启用/禁用 Hysteria2 端口跳跃，并可修改端口范围 (sb -d); 2. 支持自定义 Hysteria2 上下行带宽，无需重新安装; 3. 完善客户端配置，补充 Hysteria2 上传/下载速率及端口跳跃参数
+>
 >2026.03.22 v1.3.6 1. Refactor: Support modification after installation (CDN, Reality SNI, node name, UUID/password, server IP); 2. Perf: Rewrite text() with bash nameref and pre-scanned TEXT_NEEDS_EVAL map to eliminate per-call grep subprocesses, significantly reducing repeated string-lookup overhead; 1. 重构：支持安装后多项修改（CDN、Reality SNI、节点名、UUID/密码、服务器 IP）；2. 性能优化：用 bash nameref 和预扫描 TEXT_NEEDS_EVAL 关联数组重写 text() 函数，消除每次调用产生的 grep 子进程，大幅降低字符串查找开销
 >
 >2026.03.14 v1.3.5 Performance: Optimize concurrent process execution to significantly accelerate script installation. 性能优化：优化并发进程执行，大幅提升脚本安装速度
@@ -136,12 +145,13 @@
 
 ## 2.项目特点:
 
-* 一键部署多协议，可以单选、多选或全选 ShadowTLS v3 / XTLS Reality / Hysteria2 / Tuic V5 / ShadowSocks / Trojan / Vmess + ws / Vless + ws + tls / H2 Reality / gRPC Reality / AnyTLS, 总有一款适合你
+* 一键部署多协议，可以单选、多选或全选 ShadowTLS v3 / XTLS Reality / Hysteria2 / Tuic V5 / ShadowSocks / Trojan / Vmess + ws / Vless + ws + tls / H2 Reality / gRPC Reality / AnyTLS / NaiveProxy, 总有一款适合你
 * 所有协议均不需要域名，可选 Cloudflare Argo Tunnel 内网穿透以支持传统方式为 websocket 的协议
+* Hysteria2 支持 Realm 模式，适用于回国、没有公网入口、住宅 NAT、CGNAT 等无法开放入站端口的机器；有公网入口时不建议使用，并可选 WARP 辅助打洞提高严格 NAT 环境下的成功率
 * 节点信息输出到 V2rayN / Clash Verge / 小火箭 / Nekobox / Sing-box (SFI, SFA, SFM)，订阅自动适配客户端，一个订阅 url 走天下
 * 自定义端口，适合有限开放端口的 nat 小鸡
 * 内置 warp 链式代理解锁 chatGPT
-* 智能判断操作系统: Ubuntu 、Debian 、CentOS 、Alpine 和 Arch Linux,请务必选择 LTS 系统
+* 智能判断操作系统: Ubuntu 、Debian 、CentOS 、Alpine 、Armbian 和 Arch Linux,请务必选择 LTS 系统
 * 支持硬件结构类型: AMD 和 ARM，支持 IPv4 和 IPv6
 * 无交互极速安排模式: 一个回车完成 11 个协议的安装
 
@@ -209,7 +219,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --VLESS_HOST_DOMAIN vless.test.com \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --SUBSCRIBE=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -230,7 +242,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --VMESS_HOST_DOMAIN vmess.test.com \
   --VLESS_HOST_DOMAIN vless.test.com \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -251,7 +265,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --SUBSCRIBE=true \
   --ARGO=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -271,7 +287,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --CDN skk.moe \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --ARGO=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -294,7 +312,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='{"AccountTag":"9cc9e3e4d8f29d2a02e297f14f20513a","TunnelSecret":"6AYfKBOoNlPiTAuWg64ZwujsNuERpWLm6pPJ2qpN8PM=","TunnelID":"1ac55430-f4dc-47d5-a850-bdce824c4101"}' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -316,7 +336,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='{"AccountTag":"9cc9e3e4d8f29d2a02e297f14f20513a","TunnelSecret":"6AYfKBOoNlPiTAuWg64ZwujsNuERpWLm6pPJ2qpN8PM=","TunnelID":"1ac55430-f4dc-47d5-a850-bdce824c4101"}' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -339,7 +361,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='sudo cloudflared service install eyJhIjoiOWNjOWUzZTRkOGYyOWQyYTAyZTI5N2YxNGYyMDUxM2EiLCJ0IjoiOGNiZDA4ZjItNGM0MC00OGY1LTlmZDYtZjlmMWQ0YTcxMjUyIiwicyI6IllXWTFORGN4TW1ZdE5HTXdZUzAwT0RaakxUbGxNMkl0Wm1VMk5URTFOR0l4TkdKayJ9' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -361,7 +385,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='gKyflo59sDb5bI_fNr2OWCDnpihMUBIbJ29YsrtS' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -369,10 +395,11 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 
 
 ### 参数说明
+
 | Key 大小写不敏感（Case Insensitive）| Value |
 | --------------- | ----------- |
 | --LANGUAGE | c=中文;  e=英文 |
-| --CHOOSE_PROTOCOLS | 可多选，如 bcdfk<br> a=全部<br> b=XTLS + reality<br> c=hysteria2<br> d=tuic<br> e=ShadowTLS<br> f=shadowsocks<br> g=trojan<br> h=vmess + ws<br> i=vless + ws + tls<br> j=H2 + reality<br> k=gRPC + reality<br> l=AnyTLS |
+| --CHOOSE_PROTOCOLS | 可多选，如 bcdfk<br> a=全部<br> b=XTLS + reality<br> c=hysteria2<br> d=tuic<br> e=ShadowTLS<br> f=shadowsocks<br> g=trojan<br> h=vmess + ws<br> i=vless + ws + tls<br> j=H2 + reality<br> k=gRPC + reality<br> l=AnyTLS<br> m=NaiveProxy |
 | --START_PORT | 100 - 65520 |
 | --PORT_NGINX | n=不需要订阅，或者 100 - 65520 |
 | --SERVER_IP | IPv4 或 IPv6 地址，不需要中括号 |
@@ -383,7 +410,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 | --ARGO | 是否使用 Argo Tunnel，如果是填 true，如果使用 Origin rules，则可以忽略本 Key |
 | --ARGO_DOMAIN | 固定 Argo 域名，即是 Json 或者 Token 隧道的域名 |
 | --ARGO_AUTH | Json, Token 隧道的内容，或者是 Cloudflare API 密钥 |
-| --PORT_HOPPING_RANGE | hysteria2 跳跃端口范围，如 50000:51000 |
+| --HY2_PORT_HOPPING_RANGE | hysteria2 跳跃端口范围，如 50000:51000 |
+| --HY2_REALM | [true, false]，是否启用 Hysteria2 Realm，true 为启用。适用于没有公网入口、住宅 NAT、CGNAT 或需要回国打洞的机器，有公网入口时不建议使用，默认为 false |
+| --HY2_WARP | [true, false]，是否启用 Realm 的 WARP 辅助打洞，true 为启用。适用于 NAT 严格环境；设置为 true 时会自动启用 Realm，默认为 false |
 | --REALITY_PRIVATE | reality 密钥 |
 | --NODE_NAME_CONFIRM | 节点名 |
 
@@ -559,7 +588,8 @@ services:
 ```
 /etc/sing-box/                               # 项目主体目录
 |-- cert                                     # 存放证书文件目录
-|   |-- cert.pem                             # SSL/TLS 安全证书文件
+|   |-- cert.pem                             # SSL/TLS 安全证书文件（用于大部分协议）
+|   |-- cert_200.pem                         # SSL/TLS 安全证书文件（专用于 NaiveProxy 协议）
 |   `-- private.key                          # SSL/TLS 证书的私钥信息
 |-- conf                                     # sing-box server 配置文件目录
 |   |-- 00_log.json                          # 日志配置文件
@@ -569,6 +599,7 @@ services:
 |   |-- 04_experimental.json                 # 缓存配置文件
 |   |-- 05_dns.json                          # DNS 规则文件
 |   |-- 06_ntp.json                          # 服务端时间同步配置文件
+|   |-- 07_http_clients.json                 # 专门给 sing-box 内部组件发 HTTP 请求配置文件
 |   |-- 11_xtls-reality_inbounds.json        # Reality vision 协议配置文件
 |   |-- 12_hysteria2_inbounds.json           # Hysteria2 协议配置文件
 |   |-- 13_tuic_inbounds.json                # Tuic V5 协议配置文件 # Hysteria2 协议配置文件
@@ -579,7 +610,8 @@ services:
 |   |-- 18_vless-ws-tls_inbounds.json        # vless + ws + tls 协议配置文件
 |   |-- 19_h2-reality_inbounds.json          # Reality http2 协议配置文件
 |   |-- 20_grpc-reality_inbounds.json        # Reality gRPC 协议配置文件
-|   `-- 21_anytls_inbounds.json              # AnyTLS 协议配置文件
+|   |-- 21_anytls_inbounds.json              # AnyTLS 协议配置文件
+|   `-- 22_naive_inbounds.json               # NaiveProxy 协议配置文件
 |-- logs
 |   `-- box.log                              # sing-box 运行日志文件
 |-- subscribe                                # sing-box server 配置文件目录

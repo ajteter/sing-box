@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 脚本更新日期 2026.02.08
+# 脚本更新日期 2026.04.23
 set -e
 
 WORK_DIR=/sing-box
@@ -218,6 +218,7 @@ EOF
   cat > ${WORK_DIR}/conf/03_route.json << EOF
 {
     "route":{
+        "default_http_client": "http-client-direct",
         "rule_set":[
             {
                 "tag":"geosite-openai",
@@ -293,6 +294,17 @@ EOF
         "server_port": 123,
         "interval": "60m"
     }
+}
+EOF
+
+  # 专门给 sing-box 内部组件发 HTTP 请求用，比如这些场景会用到它：下载远程 rule_set：.srs 规则文件，ACME 申请证书，Cloudflare Origin CA 证书提供器，DERP / Tailscale 相关 HTTP 请求
+  cat > ${WORK_DIR}/conf/07_http_clients.json << EOF
+{
+    "http_clients": [
+        {
+            "tag": "http-client-direct"
+        }
+    ]
 }
 EOF
 
@@ -881,6 +893,7 @@ EOF
   # 获取自签证书指纹。argo 回源的是由 Google Trust Services（谷歌信任服务）作为中间 CA（CN=WE1）签发，受信任的证书（非自签名）
   local SELF_SIGNED_FINGERPRINT_SHA256=$(openssl x509 -fingerprint -noout -sha256 -in ${WORK_DIR}/cert/cert.pem | awk -F '=' '{print $NF}')
   local SELF_SIGNED_FINGERPRINT_BASE64=$(openssl x509 -in ${WORK_DIR}/cert/cert.pem -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64)
+  local CERT_URL=$(awk '{printf "%s\\r\\n", $0}' ${WORK_DIR}/cert/cert.pem)
 
   # 生成 nginx 配置文件
   local NGINX_CONF="user root;
@@ -1093,7 +1106,7 @@ hysteria2://${UUID}@${SERVER_IP_1}:${PORT_HYSTERIA2}?sni=addons.mozilla.org&alpn
 
   [ "${TUIC}" = 'true' ] && local V2RAYN_SUBSCRIBE+="
 ----------------------------
-tuic://${UUID}:${UUID}@${SERVER_IP_1}:${PORT_TUIC}?sni=addons.mozilla.org&alpn=h3&insecure=1&allowInsecure=1&congestion_control=bbr#${NODE_NAME// /%20}%20tuic"
+v2rayn://tuic/$(echo -n "{\"ConfigType\":8,\"CoreType\":24,\"ConfigVersion\":4,\"Remarks\":\"${NODE_NAME} tuic\",\"Address\":\"${SERVER_IP_1}\",\"Port\":${PORT_TUIC},\"Password\":\"${UUID}\",\"Username\":\"${UUID}\",\"StreamSecurity\":\"tls\",\"AllowInsecure\":\"false\",\"Sni\":\"addons.mozilla.org\",\"Alpn\":\"h3\",\"Cert\":\"${CERT_URL}\",\"ProtoExtraObj\":{\"CongestionControl\":\"bbr\"}}" | base64 -w0 | tr '+/' '-_' | tr -d '=')"
 
   [ "${SHADOWTLS}" = 'true' ] && local V2RAYN_SUBSCRIBE+="
 ----------------------------
@@ -1172,7 +1185,7 @@ vless://${UUID}@${SERVER_IP_1}:${PORT_GRPC_REALITY}?encryption=none&security=rea
 
   [ "${ANYTLS}" = 'true' ] && local V2RAYN_SUBSCRIBE+="
 ----------------------------
-anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?security=tls&sni=addons.mozilla.org&fp=firefox&insecure=1&allowInsecure=1&type=tcp#${NODE_NAME// /%20}%20anytls"
+v2rayn://anytls/$(echo -n "{\"ConfigType\":11,\"CoreType\":24,\"ConfigVersion\":4,\"Remarks\":\"${NODE_NAME} anytls\",\"Address\":\"${SERVER_IP_1}\",\"Port\":${PORT_ANYTLS},\"Password\":\"${UUID}\",\"StreamSecurity\":\"tls\",\"AllowInsecure\":\"false\",\"Sni\":\"addons.mozilla.org\",\"Fingerprint\":\"firefox\",\"Cert\":\"${CERT_URL}\"}" | base64 -w0 | tr '+/' '-_' | tr -d '=')"
 
   echo -n "$V2RAYN_SUBSCRIBE" | sed -E '/^[ ]*#|^[ ]+|^--|^\{|^\}/d' | sed '/^$/d' | base64 -w0 > ${WORK_DIR}/subscribe/v2rayn
 
@@ -1275,7 +1288,7 @@ anytls://${UUID}@${SERVER_IP_1}:${PORT_ANYTLS}?security=tls&sni=addons.mozilla.o
   local NODE_REPLACE+="\"${NODE_NAME} anytls\","
 
   # 模板
-  local SING_BOX_JSON=$(wget -qO- --tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/sing-box1)
+  local SING_BOX_JSON=$(wget -qO- --tries=3 --timeout=2 ${SUBSCRIBE_TEMPLATE}/sing-box)
 
   echo $SING_BOX_JSON | sed "s#\"<OUTBOUND_REPLACE>\",#$OUTBOUND_REPLACE#; s#\"<NODE_REPLACE>\"#${NODE_REPLACE%,}#g" | ${WORK_DIR}/jq > ${WORK_DIR}/subscribe/sing-box
 
@@ -1387,7 +1400,7 @@ $(${WORK_DIR}/qrencode https://${ARGO_DOMAIN}/${UUID}/auto)
 
   # 显示脚本使用情况数据
   hint "\n*******************************************\n"
-  local STAT=$(wget --no-check-certificate -qO- --timeout=3 "https://stat.cloudflare.now.cc/api/updateStats?script=sing-box-docker.sh")
+  local STAT=$(wget --no-check-certificate -qO- --timeout=3 "https://stat.cloudflare.now.cc/updateStats?script=sing-box-docker.sh")
   [[ "$STAT" =~ \"todayCount\":([0-9]+),\"totalCount\":([0-9]+) ]] && local TODAY="${BASH_REMATCH[1]}" && local TOTAL="${BASH_REMATCH[2]}"
   hint "\n 脚本当天运行次数: $TODAY，累计运行次数: $TOTAL \n"
 }
